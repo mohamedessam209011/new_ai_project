@@ -1,9 +1,13 @@
 // ignore_for_file: file_names, use_key_in_widget_constructors, prefer_const_constructors
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 
 class AttendanceRatePage extends StatefulWidget {
+  final String studentId;
+  const AttendanceRatePage({required this.studentId});
+
   @override
   State<AttendanceRatePage> createState() => _AttendanceRatePageState();
 }
@@ -23,7 +27,7 @@ class _AttendanceRatePageState extends State<AttendanceRatePage> {
   void generateNewQuestion() {
     final random = Random();
     setState(() {
-      num1 = random.nextInt(10) + 1; // من 1 لـ 10
+      num1 = random.nextInt(10) + 1;
       num2 = random.nextInt(10) + 1;
       answerController.clear();
       errorText = null;
@@ -35,14 +39,16 @@ class _AttendanceRatePageState extends State<AttendanceRatePage> {
     final int? parsedAnswer = int.tryParse(userAnswer);
 
     if (parsedAnswer == (num1 + num2)) {
-      // صح
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => SuccessPage(onReturn: generateNewQuestion)),
+          builder: (context) => SuccessPage(
+            onReturn: generateNewQuestion,
+            studentId: widget.studentId,
+          ),
+        ),
       );
     } else {
-      // غلط
       setState(() {
         errorText = 'Wrong answer, please try again!';
       });
@@ -54,7 +60,6 @@ class _AttendanceRatePageState extends State<AttendanceRatePage> {
     return Scaffold(
       body: Stack(
         children: [
-          // الخلفية
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -63,19 +68,16 @@ class _AttendanceRatePageState extends State<AttendanceRatePage> {
               ),
             ),
           ),
-          // زر الرجوع
           Positioned(
-            top: 30, // المسافة من أعلى الشاشة
-            left: 10, // المسافة من اليسار
+            top: 30,
+            left: 10,
             child: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.black, size: 30),
               onPressed: () {
-                Navigator.pop(context); // الرجوع للشاشة السابقة
+                Navigator.pop(context);
               },
             ),
           ),
-
-          // المحتوى
           Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -140,36 +142,88 @@ class _AttendanceRatePageState extends State<AttendanceRatePage> {
   }
 }
 
-//صفحه نسبه حضور و غياب الطالب
-class SuccessPage extends StatelessWidget {
+class SuccessPage extends StatefulWidget {
   final VoidCallback onReturn;
+  final String studentId;
 
-  const SuccessPage({super.key, required this.onReturn});
+  const SuccessPage({required this.onReturn, required this.studentId});
+
+  @override
+  State<SuccessPage> createState() => _SuccessPageState();
+}
+
+class _SuccessPageState extends State<SuccessPage> {
+  Map<String, Map<String, int>> attendanceData = {};
+
+  String normalizePresence(String value) {
+    final cleaned = value
+        .replaceAll('ـ', '')
+        .replaceAll(RegExp(r'\s+'), '')
+        .replaceAll(String.fromCharCode(8203), '') // zero width space
+        .trim()
+        .toLowerCase();
+
+    print('RAW: "$value", CLEANED: "$cleaned"');
+
+    if (cleaned == 'present') {
+      return 'present';
+    } else if (cleaned == 'absent') {
+      return 'absent';
+    } else {
+      return cleaned;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAttendanceData();
+  }
+
+  Future<void> fetchAttendanceData() async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('attendance_data')
+        .doc(widget.studentId)
+        .collection('records')
+        .get();
+
+    final Map<String, Map<String, int>> subjectMap = {};
+
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+      final rawSubject = data['Material_number'] ?? 'Unknown';
+      final rawStatus = data['Presence'] ?? 'absent';
+
+      final subject = rawSubject.toString().trim();
+      final status = rawStatus.toString().trim();
+      final normalizedStatus = normalizePresence(status);
+
+      print(
+          'subject: "$subject", status: "$status", normalized: "$normalizedStatus"');
+
+      subjectMap.putIfAbsent(subject, () => {'present': 0, 'absent': 0});
+
+      if (normalizedStatus == 'present') {
+        subjectMap[subject]!['present'] = subjectMap[subject]!['present']! + 1;
+      } else {
+        subjectMap[subject]!['absent'] = subjectMap[subject]!['absent']! + 1;
+      }
+
+      print('Updated Map: ${subjectMap[subject]}');
+    }
+
+    print('subjectMap debug: $subjectMap');
+
+    setState(() {
+      attendanceData = subjectMap;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> attendanceData = [
-      {
-        'subject': 'Math',
-        'present': 10,
-        'absent': 2,
-      },
-      {
-        'subject': 'Science',
-        'present': 15,
-        'absent': 0,
-      },
-      {
-        'subject': 'History',
-        'present': 8,
-        'absent': 1,
-      },
-    ];
-
     return Scaffold(
       body: Stack(
         children: [
-          // الخلفية
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -178,41 +232,34 @@ class SuccessPage extends StatelessWidget {
               ),
             ),
           ),
-
-          // زر الرجوع
           Positioned(
             top: 40,
             left: 10,
             child: IconButton(
               icon: const Icon(Icons.arrow_back, size: 30, color: Colors.black),
               onPressed: () {
-                onReturn();
+                widget.onReturn();
                 Navigator.pop(context);
               },
             ),
           ),
-
-          // المحتوى
           Padding(
             padding: const EdgeInsets.only(top: 80, left: 16, right: 16),
             child: Column(
               children: [
-                SizedBox(
-                  height: 120,
-                ),
+                SizedBox(height: 120),
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: attendanceData.length,
-                    itemBuilder: (context, index) {
-                      final item = attendanceData[index];
-                      final total = item['present'] + item['absent'];
+                  child: ListView(
+                    children: attendanceData.entries.map((entry) {
+                      final subject = entry.key;
+                      final present = entry.value['present'] ?? 0;
+                      final absent = entry.value['absent'] ?? 0;
+                      final total = present + absent;
                       final rate = total == 0
-                          ? 0.0
-                          : (item['present'] / total * 100).toStringAsFixed(1);
-                      final presentRatio =
-                          total == 0 ? 0.0 : item['present'] / total;
-                      final absentRatio =
-                          total == 0 ? 0.0 : item['absent'] / total;
+                          ? '0.0'
+                          : (present / total * 100).toStringAsFixed(1);
+                      final presentRatio = total == 0 ? 0.0 : present / total;
+                      final absentRatio = total == 0 ? 0.0 : absent / total;
 
                       return Card(
                         color: Colors.white.withOpacity(0.9),
@@ -226,43 +273,12 @@ class SuccessPage extends StatelessWidget {
                                 contentPadding: EdgeInsets.zero,
                                 leading: const Icon(Icons.check_circle,
                                     color: Colors.green),
-                                title: Text(item['subject']),
-                                trailing: Text(
-                                  '$rate %',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (_) => AlertDialog(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(15),
-                                      ),
-                                      title: Text('تفاصيل ${item['subject']}'),
-                                      content: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                              '✅ الحضور: ${item['present']} مرات'),
-                                          Text(
-                                              '❌ الغياب: ${item['absent']} مرات'),
-                                        ],
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context),
-                                          child: const Text('إغلاق'),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
+                                title: Text('Subject $subject'),
+                                trailing: Text('$rate %',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16)),
                               ),
-                              const SizedBox(height: 8),
                               Row(
                                 children: [
                                   Expanded(
@@ -286,17 +302,17 @@ class SuccessPage extends StatelessWidget {
                                     ),
                                   ),
                                 ],
-                              ),
+                              )
                             ],
                           ),
                         ),
                       );
-                    },
+                    }).toList(),
                   ),
                 ),
               ],
             ),
-          ),
+          )
         ],
       ),
     );

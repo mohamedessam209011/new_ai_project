@@ -1,84 +1,152 @@
-// ignore_for_file: file_names
+// ignore_for_file: prefer_const_constructors, file_names
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-//صفحه اظهار الجدول
-
-class StudentTimeTablePage extends StatelessWidget {
+class StudentTimeTablePage extends StatefulWidget {
   final String studentCode;
 
   const StudentTimeTablePage({super.key, required this.studentCode});
 
   @override
+  State<StudentTimeTablePage> createState() => _StudentTimeTablePageState();
+}
+
+class _StudentTimeTablePageState extends State<StudentTimeTablePage> {
+  List<Map<String, dynamic>> scheduleList = [];
+  bool isLoading = true;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchStudentBandCodeAndSchedule();
+  }
+
+  Future<void> fetchStudentBandCodeAndSchedule() async {
+    try {
+      final studentDoc = await FirebaseFirestore.instance
+          .collection('student')
+          .doc(widget.studentCode)
+          .get();
+
+      if (studentDoc.exists) {
+        final data = studentDoc.data()!;
+
+        if (!data.containsKey('Band_Code')) {
+          setState(() {
+            errorMessage = 'لا يوجد Band_Code مرتبط بحسابك';
+            isLoading = false;
+          });
+          return;
+        }
+
+        final bandCode = data['Band_Code'];
+
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('studyschedule')
+            .where('Band_Code', isEqualTo: bandCode)
+            .get();
+
+        final List<Map<String, dynamic>> enrichedSchedule = [];
+
+        for (var doc in querySnapshot.docs) {
+          final item = doc.data();
+
+          // Get doctor name
+          String doctorName = '';
+          final doctorDoc = await FirebaseFirestore.instance
+              .collection('doctor')
+              .doc(item['doctor_id'].toString())
+              .get();
+          if (doctorDoc.exists) {
+            final doctorData = doctorDoc.data()!;
+            doctorName =
+                '${doctorData['first_name'] ?? ''} ${doctorData['third_Name'] ?? ''} ${doctorData['LAST_name'] ?? ''}';
+          }
+
+          // Get subject name from academic_subject
+          String subjectName = '';
+          final subjectDoc = await FirebaseFirestore.instance
+              .collection('academic_subject')
+              .doc(item['Subject_number'].toString())
+              .get();
+          if (subjectDoc.exists) {
+            subjectName = subjectDoc.data()!['Material_name'] ?? '';
+          }
+
+          // Get place site
+          String placeName = '';
+          final placeDoc = await FirebaseFirestore.instance
+              .collection('place')
+              .doc(item['Place'].toString())
+              .get();
+          if (placeDoc.exists) {
+            placeName = placeDoc.data()!['site'] ?? '';
+          }
+
+          enrichedSchedule.add({
+            ...item,
+            'doctor_name': doctorName,
+            'subject_name': subjectName,
+            'place_name': placeName,
+          });
+        }
+
+        setState(() {
+          scheduleList = enrichedSchedule;
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          errorMessage = 'الطالب غير موجود في قاعدة البيانات';
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('💥 Error: \$e');
+      setState(() {
+        errorMessage = 'حدث خطأ أثناء تحميل البيانات';
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final Map<String, List<String>> dummyTimeTable = {
-      '1234': ['Math - 8AM', 'Science - 10AM', 'History - 12PM'],
-    };
-
-    final List<String>? schedule = dummyTimeTable[studentCode];
-
     return Scaffold(
-      body: Stack(
-        children: [
-          // الخلفية
-          Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('images/Table_student2.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          // زر الرجوع
-          Positioned(
-            top: 30, // المسافة من أعلى الشاشة
-            left: 10, // المسافة من اليسار
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black, size: 30),
-              onPressed: () {
-                Navigator.pop(context); // الرجوع للشاشة السابقة
-              },
-            ),
-          ),
-
-          // المحتوى فوق الخلفية
-          Center(
-            child: schedule == null
-                ? const Text(
-                    'No schedule found for this student code.',
-                    style: TextStyle(fontSize: 18, color: Colors.black),
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        height: 300, // ارتفاع مناسب عشان الجدول يظهر في النص
-                        child: ListView.builder(
-                          itemCount: schedule.length,
-                          itemBuilder: (context, index) {
-                            return Card(
-                              color: Colors.white.withOpacity(0.85),
-                              margin: const EdgeInsets.symmetric(
-                                  horizontal: 30, vertical: 8),
-                              child: ListTile(
-                                leading: const Icon(Icons.schedule),
-                                title: Text(
-                                  schedule[index],
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-        ],
+      appBar: AppBar(
+        title: Text('Time Table'),
+        backgroundColor: Color(0xFF05B8FB),
       ),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : errorMessage != null
+              ? Center(child: Text(errorMessage!))
+              : scheduleList.isEmpty
+                  ? Center(child: Text('لا توجد بيانات جدول'))
+                  : ListView.builder(
+                      itemCount: scheduleList.length,
+                      itemBuilder: (context, index) {
+                        final item = scheduleList[index];
+                        return Card(
+                          margin:
+                              EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: ListTile(
+                            title: Text(
+                                '${item['Day']} | ${item['start_time']} - ${item['end_time']}'),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Subject: ${item['subject_name']}'),
+                                Text('Doctor: ${item['doctor_name']}'),
+                                Text('Place: ${item['place_name']}'),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
     );
   }
 }

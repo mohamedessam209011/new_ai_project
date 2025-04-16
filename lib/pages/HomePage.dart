@@ -184,7 +184,7 @@ class _HomePageState extends State<HomePage> {
                     context,
                     MaterialPageRoute(
                         builder: (context) => StudentTimeTablePage(
-                              studentCode: '1234',
+                              studentCode: widget.studentCode ?? '',
                             )),
                   );
                 },
@@ -220,7 +220,7 @@ class _HomePageState extends State<HomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => AttendanceRatePage()),
+                        builder: (context) => AttendanceRatePage(studentId: widget.studentCode ?? '')),
                   );
                 },
                 child: Container(
