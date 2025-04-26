@@ -1,11 +1,10 @@
-// ignore_for_file: prefer_const_constructors, library_private_types_in_public_api, prefer_const_literals_to_create_immutables, file_names, use_build_context_synchronously
+// ignore_for_file: prefer_const_constructors, library_private_types_in_public_api, prefer_const_literals_to_create_immutables, file_names, use_build_context_synchronously, avoid_print
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:new_ai_project/pages/HomePage.dart';
 
 class LoginScreen extends StatefulWidget {
   final String userType;
-
   const LoginScreen({super.key, required this.userType});
 
   @override
@@ -19,29 +18,36 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
   bool _isLoading = false;
 
+  String normalizeUserType(String input) {
+    switch (input.toLowerCase()) {
+      case 'guardian':
+        return 'parent';
+      default:
+        return input.toLowerCase();
+    }
+  }
+
   Future<void> _loginWithCode(String code, String password) async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // تحديد اسم الـ collection المناسب حسب نوع المستخدم
       String collectionName;
-      switch (widget.userType.toLowerCase()) {
+      switch (normalizeUserType(widget.userType)) {
         case 'student':
           collectionName = 'student';
           break;
         case 'doctor':
           collectionName = 'doctor';
           break;
-        case 'guardian':
-          collectionName = 'Guardian';
+        case 'parent':
+          collectionName = 'parent';
           break;
         default:
           throw Exception('User type unknown');
       }
 
-      // قراءة المستخدم من Firestore
       final docSnapshot = await FirebaseFirestore.instance
           .collection(collectionName)
           .doc(code)
@@ -59,8 +65,8 @@ class _LoginScreenState extends State<LoginScreen> {
         final storedPassword = data['PASSWORD'];
         final userTypeFromDb = data['userType'];
 
-        if (userTypeFromDb.toString().toLowerCase() !=
-            widget.userType.toLowerCase()) {
+        if (normalizeUserType(userTypeFromDb.toString()) !=
+            normalizeUserType(widget.userType)) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('User type does not match account'),
@@ -73,7 +79,9 @@ class _LoginScreenState extends State<LoginScreen> {
             MaterialPageRoute(
               builder: (context) => HomePage(
                 userType: widget.userType,
-                studentCode: code, // ✅ هنا هو الكود اللي دخل بيه الطالب
+                studentCode: code,
+                doctorId:
+                    widget.userType.toLowerCase() == 'doctor' ? code : null,
               ),
             ),
           );
@@ -273,8 +281,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         return 'student';
       case 'doctor':
         return 'doctor';
-      case 'guardian':
-        return 'Guardian';
+      case 'parent':
+        return 'parent';
       default:
         throw Exception('User type unknown');
     }
@@ -436,8 +444,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         return 'student';
       case 'doctor':
         return 'doctor';
-      case 'guardian':
-        return 'Guardian';
+      case 'parent':
+        return 'parent';
       default:
         throw Exception('User type unknown');
     }

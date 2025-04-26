@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, file_names
+// ignore_for_file: prefer_const_constructors, file_names, avoid_print
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -41,7 +41,9 @@ class _StudentTimeTablePageState extends State<StudentTimeTablePage> {
           return;
         }
 
-        final bandCode = data['Band_Code'];
+        final bandCode = data['Band_Code'] is int
+            ? data['Band_Code']
+            : int.tryParse(data['Band_Code'].toString()) ?? 0;
 
         final querySnapshot = await FirebaseFirestore.instance
             .collection('studyschedule')

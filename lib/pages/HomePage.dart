@@ -1,9 +1,9 @@
-// ignore_for_file: prefer_const_constructors, file_names, prefer_const_literals_to_create_immutables
+// ignore_for_file: prefer_const_constructors, file_names, prefer_const_literals_to_create_immutables, avoid_print
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:new_ai_project/pages/AttendanceRatePage.dart';
+import 'package:new_ai_project/pages/AttendanceRatePage_stu.dart';
 import 'package:new_ai_project/pages/Attendance_Monitoring.dart';
-import 'package:new_ai_project/pages/Attendance_follow_up.dart';
+import 'package:new_ai_project/pages/Attendance_follow_up_parent.dart';
 import 'package:new_ai_project/pages/Manual_Attendance_Registration.dart';
 import 'package:new_ai_project/pages/Table_doctor.dart';
 import 'package:new_ai_project/pages/TimeTablePage.dart';
@@ -13,8 +13,14 @@ import 'package:new_ai_project/pages/year_work.dart';
 class HomePage extends StatefulWidget {
   final String userType;
   final String? studentCode;
+  final String? doctorId;
 
-  const HomePage({super.key, required this.userType, this.studentCode});
+  const HomePage({
+    super.key,
+    required this.userType,
+    this.studentCode,
+    this.doctorId,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -28,14 +34,20 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     if (widget.userType.toLowerCase() == 'student' &&
         widget.studentCode != null) {
-      fetchStudentName(widget.studentCode!);
+      fetchName('student', widget.studentCode!);
+    } else if (widget.userType.toLowerCase() == 'doctor' &&
+        widget.doctorId != null) {
+      fetchName('doctor', widget.doctorId!);
+    } else if (widget.userType.toLowerCase() == 'guardian' &&
+        widget.studentCode != null) {
+      fetchName('parent', widget.studentCode!);
     }
   }
 
-  Future<void> fetchStudentName(String code) async {
+  Future<void> fetchName(String collection, String code) async {
     try {
       final doc = await FirebaseFirestore.instance
-          .collection('student')
+          .collection(collection)
           .doc(code)
           .get();
 
@@ -80,7 +92,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           // 👇 هنا تحط الاسم
-          if (widget.userType == 'Student' && fullName.isNotEmpty) ...[
+          if (fullName.isNotEmpty) ...[
             Positioned(
               top: 60,
               left: 0,
@@ -220,7 +232,8 @@ class _HomePageState extends State<HomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => AttendanceRatePage(studentId: widget.studentCode ?? '')),
+                        builder: (context) => AttendanceRatePage(
+                            studentId: widget.studentCode ?? '')),
                   );
                 },
                 child: Container(
@@ -257,7 +270,10 @@ class _HomePageState extends State<HomePage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => Table_doctor()),
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          TableDoctor(doctorId: widget.doctorId ?? ''),
+                    ),
                   );
                 },
                 child: Container(
@@ -293,7 +309,7 @@ class _HomePageState extends State<HomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => Attendance_Monitoring()),
+                        builder: (context) => AttendanceMonitoring()),
                   );
                 },
                 child: Container(
@@ -366,7 +382,9 @@ class _HomePageState extends State<HomePage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => year_work()),
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            year_work(parentId: widget.studentCode ?? '')),
                   );
                 },
                 child: Container(
@@ -400,10 +418,11 @@ class _HomePageState extends State<HomePage> {
               child: GestureDetector(
                 onTap: () {
                   Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => Attendance_follow_up()),
-                  );
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Attendance_follow_up(
+                            parentId: widget.studentCode ?? ''),
+                      ));
                 },
                 child: Container(
                   width: 225,
