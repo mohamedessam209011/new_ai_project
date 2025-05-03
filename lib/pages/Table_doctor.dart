@@ -1,21 +1,27 @@
-// ignore_for_file: file_names, camel_case_types, prefer_const_constructors, avoid_print
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TableDoctor extends StatelessWidget {
   final String doctorId;
 
-  const TableDoctor({super.key, required this.doctorId});
+  const TableDoctor({Key? key, required this.doctorId}) : super(key: key);
 
+  // دالة fetchSchedule لتحميل جدول الدكتور
   Future<List<Map<String, dynamic>>> fetchSchedule(String doctorId) async {
+    // doctor_id مخزن كـ Number في Firestore، نحول النص إلى عدد
+    final int doctorIdNum = int.tryParse(doctorId) ?? 0;
+
+    // جلب الجدول
     final scheduleSnapshot = await FirebaseFirestore.instance
         .collection('studyschedule')
-        .where('doctor_id', isEqualTo: doctorId)
+        .where('doctor_id', isEqualTo: doctorIdNum)
         .get();
-    print('📥 جاري تحميل جدول الدكتور: $doctorId');
+
+    print('📥 جاري تحميل جدول الدكتور: $doctorIdNum');
 
     if (scheduleSnapshot.docs.isEmpty) {
       print('❌ لا يوجد جدول لهذا الدكتور في studyschedule');
+      return [];
     }
 
     List<Map<String, dynamic>> scheduleList = [];
@@ -23,24 +29,33 @@ class TableDoctor extends StatelessWidget {
     for (var doc in scheduleSnapshot.docs) {
       final data = doc.data();
 
-      // اسم المادة
+      print('Subject_number: ${data['Subject_number']}');
+      print('Place: ${data['Place']}');
+
+      // جلب اسم المادة من academic_subject
       String subjectName = 'Unknown';
       final subjectSnapshot = await FirebaseFirestore.instance
           .collection('academic_subject')
-          .doc(data['Subject_number'])
+          .doc(data['Subject_number'].toString())
           .get();
       if (subjectSnapshot.exists) {
         subjectName = subjectSnapshot.data()?['Material_name'] ?? 'Unknown';
+        print('Fetched subject: $subjectName');
+      } else {
+        print('❌ لم يتم العثور على المادة ${data['Subject_number']}');
       }
 
-      // اسم القاعة (اختياري)
-      String roomName = data['Place'] ?? '';
+      // جلب اسم القاعة من place
+      String roomName = data['Place'].toString();
       final placeSnapshot = await FirebaseFirestore.instance
           .collection('place')
-          .doc(data['Place'])
+          .doc(roomName)
           .get();
       if (placeSnapshot.exists) {
         roomName = placeSnapshot.data()?['site'] ?? roomName;
+        print('Fetched room: $roomName');
+      } else {
+        print('❌ لم يتم العثور على القاعة $roomName');
       }
 
       scheduleList.add({
@@ -74,13 +89,11 @@ class TableDoctor extends StatelessWidget {
             top: 30,
             left: 10,
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black, size: 30),
-              onPressed: () {
-                Navigator.pop(context);
-              },
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
             ),
           ),
-          // جدول البيانات
+          // المحتوى الرئيسي
           FutureBuilder<List<Map<String, dynamic>>>(
             future: fetchSchedule(doctorId),
             builder: (context, snapshot) {
@@ -91,14 +104,15 @@ class TableDoctor extends StatelessWidget {
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return const Center(child: Text('لا يوجد جدول لهذا الدكتور'));
               }
-
               final schedule = snapshot.data!;
+              print('Schedule data: $schedule');
               return Padding(
                 padding: const EdgeInsets.only(top: 150),
                 child: ListView.builder(
                   itemCount: schedule.length,
                   itemBuilder: (context, index) {
                     final item = schedule[index];
+                    print('Displaying subject: ${item['subject']}');
                     return Card(
                       margin: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),

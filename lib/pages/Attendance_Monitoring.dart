@@ -87,6 +87,12 @@ class _AttendanceMonitoringState extends State<AttendanceMonitoring> {
           'status': status,
           'time': time,
         });
+        // ✅ ترتيب البيانات حسب التاريخ (من الأحدث إلى الأقدم)
+        attendanceList.sort((a, b) {
+          DateTime dateA = DateTime.parse(a['time']);
+          DateTime dateB = DateTime.parse(b['time']);
+          return dateB.compareTo(dateA); // لتصنيف البيانات من الأحدث إلى الأقدم
+        });
       }
     } catch (e) {
       print("❌ Error fetching attendance: $e");

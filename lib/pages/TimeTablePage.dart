@@ -64,7 +64,7 @@ class _StudentTimeTablePageState extends State<StudentTimeTablePage> {
           if (doctorDoc.exists) {
             final doctorData = doctorDoc.data()!;
             doctorName =
-                '${doctorData['first_name'] ?? ''} ${doctorData['third_Name'] ?? ''} ${doctorData['LAST_name'] ?? ''}';
+                '${doctorData['First_name'] ?? ''} ${doctorData['secound_Name'] ?? ''} ${doctorData['Third_Name'] ?? ''}';
           }
 
           // Get subject name from academic_subject

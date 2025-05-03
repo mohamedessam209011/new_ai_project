@@ -3,6 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:new_ai_project/pages/HomePage.dart';
 
+// يحوّل "guardian" لـ "parent" وكل حاجة تختصر لـ lower-case
+String normalizeUserType(String input) {
+  return input.toLowerCase() == 'guardian' ? 'parent' : input.toLowerCase();
+}
+
+// بيرجع اسم الكولكشن الصح على حسب userType
+
 class LoginScreen extends StatefulWidget {
   final String userType;
   const LoginScreen({super.key, required this.userType});
@@ -276,15 +283,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   String _getCollectionName(String userType) {
-    switch (userType.toLowerCase()) {
+    final type = normalizeUserType(userType);
+    switch (type) {
       case 'student':
         return 'student';
       case 'doctor':
         return 'doctor';
-      case 'parent':
+      case 'parent': // كده بيدعم guardian برضه
         return 'parent';
       default:
-        throw Exception('User type unknown');
+        throw Exception('Unknown userType: $userType');
     }
   }
 
@@ -439,15 +447,16 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   bool _isPasswordHidden = true;
   bool _isConfirmPasswordHidden = true;
   String _getCollectionName(String userType) {
-    switch (userType.toLowerCase()) {
+    final type = normalizeUserType(userType);
+    switch (type) {
       case 'student':
         return 'student';
       case 'doctor':
         return 'doctor';
-      case 'parent':
+      case 'parent': // كده بيدعم guardian برضه
         return 'parent';
       default:
-        throw Exception('User type unknown');
+        throw Exception('Unknown userType: $userType');
     }
   }
 

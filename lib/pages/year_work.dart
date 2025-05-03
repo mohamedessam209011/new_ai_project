@@ -24,7 +24,7 @@ class year_work extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('أبناء ولي الأمر'),
+        title: const Text('The guardian’s children'),
         backgroundColor: const Color(0xFF05B8FB),
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
@@ -35,7 +35,8 @@ class year_work extends StatelessWidget {
           }
 
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('لا يوجد أبناء مرتبطين بك.'));
+            return const Center(
+                child: Text('There are no children associated with you.'));
           }
 
           final students = snapshot.data!;
@@ -69,7 +70,7 @@ class year_work extends StatelessWidget {
                     ),
                   ),
                   subtitle: Text(
-                    "الكود: $id",
+                    "code: $id",
                     style: const TextStyle(color: Colors.grey),
                   ),
                   onTap: () {

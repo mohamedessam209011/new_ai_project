@@ -24,7 +24,7 @@ class Attendance_follow_up extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('متابعة الحضور'),
+        title: const Text('Follow attendance'),
         backgroundColor: const Color(0xFF05B8FB),
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
@@ -35,7 +35,8 @@ class Attendance_follow_up extends StatelessWidget {
           }
 
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('لا يوجد أبناء مرتبطين بك.'));
+            return const Center(
+                child: Text('There are no children associated with you.'));
           }
 
           final students = snapshot.data!;
@@ -68,7 +69,7 @@ class Attendance_follow_up extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  subtitle: Text("الكود: $id",
+                  subtitle: Text("code: $id",
                       style: const TextStyle(color: Colors.grey)),
                   onTap: () {
                     Navigator.push(

@@ -8,6 +8,9 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -38,10 +41,10 @@ class WelcomeScreen extends StatelessWidget {
               ],
             ),
           ),
-          // زر Student تحت صورة الولد
+          // زر Student
           Positioned(
-            top: 320, // المسافة من الأعلى
-            left: 185, // المسافة من اليسار
+            top: screenHeight * 0.4, // نسبة من ارتفاع الشاشة
+            left: screenWidth * 0.5, // نسبة من عرض الشاشة
             child: GestureDetector(
               onTap: () {
                 // الانتقال لصفحة تسجيل الطالب
@@ -52,8 +55,8 @@ class WelcomeScreen extends StatelessWidget {
                 );
               },
               child: Container(
-                width: 183,
-                height: 50,
+                width: screenWidth * 0.4, // 50% من عرض الشاشة
+                height: screenHeight * 0.06, // 7% من ارتفاع الشاشة
                 padding: const EdgeInsets.all(10),
                 decoration: ShapeDecoration(
                   color: const Color(0xFF05B8FB),
@@ -70,7 +73,7 @@ class WelcomeScreen extends StatelessWidget {
                       'Student',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 24,
+                        fontSize: 22,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w700,
                       ),
@@ -82,8 +85,8 @@ class WelcomeScreen extends StatelessWidget {
           ),
           // زر Doctor
           Positioned(
-            top: 530, // المسافة من الأعلى
-            right: 200, // المسافة من اليسار
+            top: screenHeight * 0.64, // نسبة من ارتفاع الشاشة
+            right: screenWidth * 0.53, // نسبة من عرض الشاشة
             child: GestureDetector(
               onTap: () {
                 // الانتقال لصفحة تسجيل الدكتور
@@ -94,13 +97,13 @@ class WelcomeScreen extends StatelessWidget {
                 );
               },
               child: Container(
-                width: 183, // عرض الزر
-                height: 50, // ارتفاع الزر
-                padding: const EdgeInsets.all(10), // المسافة الداخلية
+                width: screenWidth * 0.4, // 50% من عرض الشاشة
+                height: screenHeight * 0.06, // 7% من ارتفاع الشاشة
+                padding: const EdgeInsets.all(10),
                 decoration: ShapeDecoration(
-                  color: const Color(0xFF05B8FB), // لون الخلفية
+                  color: const Color(0xFF05B8FB),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20), // زوايا مدورة
+                    borderRadius: BorderRadius.circular(20),
                   ),
                 ),
                 child: Row(
@@ -109,12 +112,12 @@ class WelcomeScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      'Doctor', // نص الزر
+                      'Doctor',
                       style: TextStyle(
-                        color: Colors.white, // لون النص
-                        fontSize: 24, // حجم النص
-                        fontFamily: 'Inter', // نوع الخط
-                        fontWeight: FontWeight.w700, // سمك الخط
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -124,8 +127,8 @@ class WelcomeScreen extends StatelessWidget {
           ),
           // زر Guardian
           Positioned(
-            top: 740, // المسافة من الأعلى
-            left: 185, // المسافة من اليسار
+            top: screenHeight * 0.89, // نسبة من ارتفاع الشاشة
+            left: screenWidth * 0.5, // نسبة من عرض الشاشة
             child: GestureDetector(
               onTap: () {
                 // الانتقال لصفحة تسجيل ولي الأمر
@@ -136,13 +139,13 @@ class WelcomeScreen extends StatelessWidget {
                 );
               },
               child: Container(
-                width: 183, // عرض الزر
-                height: 50, // ارتفاع الزر
-                padding: const EdgeInsets.all(10), // المسافة الداخلية
+                width: screenWidth * 0.4, // 50% من عرض الشاشة
+                height: screenHeight * 0.06, // 7% من ارتفاع الشاشة
+                padding: const EdgeInsets.all(10),
                 decoration: ShapeDecoration(
-                  color: const Color(0xFF05B8FB), // لون الخلفية
+                  color: const Color(0xFF05B8FB),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20), // زوايا مدورة
+                    borderRadius: BorderRadius.circular(20),
                   ),
                 ),
                 child: Row(
@@ -151,12 +154,12 @@ class WelcomeScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      'Guardian', // نص الزر
+                      'Guardian',
                       style: TextStyle(
-                        color: Colors.white, // لون النص
-                        fontSize: 24, // حجم النص
-                        fontFamily: 'Inter', // نوع الخط
-                        fontWeight: FontWeight.w700, // سمك الخط
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],

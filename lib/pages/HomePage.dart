@@ -1,4 +1,5 @@
-// ignore_for_file: prefer_const_constructors, file_names, prefer_const_literals_to_create_immutables, avoid_print
+// ignore_for_file: avoid_print, prefer_const_constructors, prefer_const_literals_to_create_immutables
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:new_ai_project/pages/AttendanceRatePage_stu.dart';
@@ -67,6 +68,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
     // تحديد الخلفية
     String backgroundImage;
     if (widget.userType == 'Student') {
@@ -146,13 +150,12 @@ class _HomePageState extends State<HomePage> {
           ),
           // الأزرار بناءً على نوع المستخدم
 
-          //زراير الطالب
+          // زراير الطالب
           if (widget.userType == 'Student') ...[
             // زر "Works of Year"
             Positioned(
-              top: 350, // المسافة من الأعلى
-              left: 210,
-
+              top: screenHeight * 0.42, // نسبة من ارتفاع الشاشة
+              left: screenWidth * 0.54, // نسبة من عرض الشاشة
               child: GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -164,8 +167,8 @@ class _HomePageState extends State<HomePage> {
                   );
                 },
                 child: Container(
-                  width: 170,
-                  height: 50,
+                  width: screenWidth * 0.4, // نسبة من عرض الشاشة
+                  height: screenHeight * 0.06, // نسبة من ارتفاع الشاشة
                   padding: const EdgeInsets.all(10),
                   decoration: ShapeDecoration(
                     color: const Color(0xFF05B8FB),
@@ -188,8 +191,8 @@ class _HomePageState extends State<HomePage> {
             ),
             // زر "Time Table"
             Positioned(
-              top: 540,
-              right: 230,
+              top: screenHeight * 0.64, // نسبة من ارتفاع الشاشة
+              left: screenWidth * 0.05, // نسبة من عرض الشاشة
               child: GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -201,8 +204,8 @@ class _HomePageState extends State<HomePage> {
                   );
                 },
                 child: Container(
-                  width: 150,
-                  height: 50,
+                  width: screenWidth * 0.3,
+                  height: screenHeight * 0.06,
                   padding: const EdgeInsets.all(10),
                   decoration: ShapeDecoration(
                     color: const Color(0xFF05B8FB),
@@ -225,8 +228,8 @@ class _HomePageState extends State<HomePage> {
             ),
             // زر "Attendance Rate"
             Positioned(
-              bottom: 50,
-              left: 190,
+              bottom: 70,
+              left: screenWidth * 0.53,
               child: GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -237,8 +240,8 @@ class _HomePageState extends State<HomePage> {
                   );
                 },
                 child: Container(
-                  width: 183,
-                  height: 50,
+                  width: screenWidth * 0.4,
+                  height: screenHeight * 0.06,
                   padding: const EdgeInsets.all(10),
                   decoration: ShapeDecoration(
                     color: const Color(0xFF05B8FB),
@@ -262,10 +265,10 @@ class _HomePageState extends State<HomePage> {
           ],
           // زراير الدكتور
           if (widget.userType == 'Doctor') ...[
-            // زر "table"
+            // زر "Table"
             Positioned(
-              top: 330, // المسافة من الأعلى
-              left: 135,
+              top: screenHeight * 0.40,
+              left: screenWidth * 0.33,
               child: GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -277,8 +280,8 @@ class _HomePageState extends State<HomePage> {
                   );
                 },
                 child: Container(
-                  width: 120,
-                  height: 50,
+                  width: screenWidth * 0.3,
+                  height: screenHeight * 0.06,
                   padding: const EdgeInsets.all(10),
                   decoration: ShapeDecoration(
                     color: const Color(0xFF05B8FB),
@@ -291,7 +294,7 @@ class _HomePageState extends State<HomePage> {
                       'Table',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 20,
+                        fontSize: 25,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -299,11 +302,10 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-
-            // زر " Attendance Monitoring"
+            // زر "Attendance Monitoring"
             Positioned(
-              top: 520,
-              right: 125,
+              top: screenHeight * 0.63,
+              left: screenWidth * 0.2,
               child: GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -313,8 +315,8 @@ class _HomePageState extends State<HomePage> {
                   );
                 },
                 child: Container(
-                  width: 130,
-                  height: 75,
+                  width: screenWidth * 0.6,
+                  height: screenHeight * 0.07,
                   padding: const EdgeInsets.all(10),
                   decoration: ShapeDecoration(
                     color: const Color(0xFF05B8FB),
@@ -335,10 +337,10 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            // زر "  Manual_Attendance_Registration "
+            // زر "Manual Attendance Registration"
             Positioned(
-              bottom: 30,
-              left: 110,
+              bottom: 50,
+              left: screenWidth * 0.15,
               child: GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -348,8 +350,8 @@ class _HomePageState extends State<HomePage> {
                   );
                 },
                 child: Container(
-                  width: 200,
-                  height: 70,
+                  width: screenWidth * 0.7,
+                  height: screenHeight * 0.06,
                   padding: const EdgeInsets.all(10),
                   decoration: ShapeDecoration(
                     color: const Color(0xFF05B8FB),
@@ -372,12 +374,12 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ],
-          //زراير ولي الامر
+          // زرائر ولي الأمر
           if (widget.userType == 'Guardian') ...[
-            // زر "year_work"
+            // زر "Year Work"
             Positioned(
-              top: 420, // المسافة من الأعلى
-              left: 135,
+              top: screenHeight * 0.52, // نسبة من ارتفاع الشاشة
+              left: screenWidth * 0.33, // نسبة من عرض الشاشة
               child: GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -388,8 +390,8 @@ class _HomePageState extends State<HomePage> {
                   );
                 },
                 child: Container(
-                  width: 115,
-                  height: 50,
+                  width: screenWidth * 0.3,
+                  height: screenHeight * 0.06,
                   padding: const EdgeInsets.all(10),
                   decoration: ShapeDecoration(
                     color: const Color(0xFF05B8FB),
@@ -399,7 +401,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   child: Center(
                     child: Text(
-                      'year work',
+                      'Year Work',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
@@ -410,23 +412,23 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-
-            // زر "  Attendance_follow_up "
+            // زر "Attendance Follow Up"
             Positioned(
-              bottom: 80,
-              left: 90,
+              bottom: screenHeight * 0.1, // 10% من ارتفاع الشاشة
+              left: screenWidth * 0.2,
               child: GestureDetector(
                 onTap: () {
                   Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Attendance_follow_up(
-                            parentId: widget.studentCode ?? ''),
-                      ));
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Attendance_follow_up(
+                          parentId: widget.studentCode ?? ''),
+                    ),
+                  );
                 },
                 child: Container(
-                  width: 225,
-                  height: 50,
+                  width: screenWidth * 0.6,
+                  height: screenHeight * 0.06,
                   padding: const EdgeInsets.all(10),
                   decoration: ShapeDecoration(
                     color: const Color(0xFF05B8FB),
@@ -436,8 +438,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   child: Center(
                     child: Text(
-                      'Attendance follow up',
-                      textAlign: TextAlign.center,
+                      'Attendance Follow Up',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,

@@ -195,6 +195,17 @@ class _Manual_Attendance_RegistrationState
               ),
             ),
           ),
+          // زر الرجوع
+          Positioned(
+            top: 30, // المسافة من أعلى الشاشة
+            left: 10, // المسافة من اليسار
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black, size: 30),
+              onPressed: () {
+                Navigator.pop(context); // الرجوع للشاشة السابقة
+              },
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.only(top: 200),
             child: Center(
