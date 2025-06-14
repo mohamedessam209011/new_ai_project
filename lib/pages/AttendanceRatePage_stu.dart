@@ -1,4 +1,4 @@
-// النسخة المحسنة بالكامل لصفحة Attendance Rate مع شكل متظبط وظهور اسم الطالب واسم المادة
+// AttendanceRatePage_stu.dart
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -122,7 +122,6 @@ class _AttendanceRatePageState extends State<AttendanceRatePage> {
                       child: const Center(
                         child: Text(
                           'Submit',
-                          textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -169,28 +168,27 @@ class _SuccessPageState extends State<SuccessPage> {
     try {
       final snapshot = await FirebaseFirestore.instance
           .collection('attendance_data')
-          .where('student_id', isEqualTo: int.parse(widget.studentId))
+          .where('student_id',
+              isEqualTo: int.parse(widget.studentId)) // تحويل إلى int
           .get();
 
       final Map<String, Map<String, int>> subjectMap = {};
 
       for (var doc in snapshot.docs) {
         final data = doc.data();
-        final rawSubject = data['material_number'] ?? 'Unknown';
+        final rawSubject = data['material_number']?.toString() ?? 'Unknown';
         final rawStatus = data['presence'] ?? 'absent';
 
-        final subject = rawSubject.toString().trim();
-        final status = rawStatus.toString().trim();
-        final normalizedStatus = normalizePresence(status);
+        final subject = rawSubject.trim();
+        final status = normalizePresence(rawStatus.toString());
 
-        subjectMap.putIfAbsent(subject, () => {'present': 0, 'absence': 0});
+        subjectMap.putIfAbsent(subject, () => {'present': 0, 'absent': 0});
 
-        if (normalizedStatus == 'present') {
+        if (status == 'present') {
           subjectMap[subject]!['present'] =
               subjectMap[subject]!['present']! + 1;
         } else {
-          subjectMap[subject]!['absence'] =
-              subjectMap[subject]!['absence']! + 1;
+          subjectMap[subject]!['absent'] = subjectMap[subject]!['absent']! + 1;
         }
       }
 
@@ -212,10 +210,11 @@ class _SuccessPageState extends State<SuccessPage> {
       if (studentDoc.exists) {
         final data = studentDoc.data();
         final firstName = data?['First_name'] ?? '';
-        final secoundName = data?['secound_Name'] ?? '';
+        final secondName = data?['second_Name'] ?? '';
+        final thirdName = data?['Third_Name'] ?? '';
 
         setState(() {
-          studentName = '$firstName $secoundName';
+          studentName = '$firstName $secondName $thirdName'.trim();
         });
       }
     } catch (e) {
@@ -229,9 +228,8 @@ class _SuccessPageState extends State<SuccessPage> {
           await FirebaseFirestore.instance.collection('academic_subject').get();
 
       for (var doc in snapshot.docs) {
-        materialNames[doc.id] = doc['Material_name'] ?? '';
+        materialNames[doc.id] = doc['Material_name'] ?? 'Unknown Subject';
       }
-      print('Material names fetched: $materialNames');
     } catch (e) {
       print('Error fetching material names: $e');
     }
@@ -241,16 +239,15 @@ class _SuccessPageState extends State<SuccessPage> {
     final cleaned = value
         .replaceAll('ـ', '')
         .replaceAll(RegExp(r'\s+'), '')
-        .replaceAll(String.fromCharCode(8203), '')
         .trim()
         .toLowerCase();
 
-    if (cleaned == 'present' || cleaned == 'true') {
+    if (cleaned == 'حاضر' || cleaned == 'true' || cleaned == 'present') {
       return 'present';
-    } else if (cleaned == 'absent' || cleaned == 'false') {
-      return 'absence';
+    } else if (cleaned == 'غائب' || cleaned == 'false' || cleaned == 'absent') {
+      return 'absent';
     } else {
-      return cleaned;
+      return 'absent';
     }
   }
 
@@ -290,85 +287,106 @@ class _SuccessPageState extends State<SuccessPage> {
                     color: Colors.black,
                   ),
                 ),
-                const SizedBox(height: 0),
+                const SizedBox(height: 20),
                 Expanded(
                   child: attendanceData.isEmpty
-                      ? const Center(
-                          child: Text('No attendance data available'))
-                      : ListView(
-                          children: attendanceData.entries.map((entry) {
+                      ? const Center(child: Text('No attendance records'))
+                      : ListView.separated(
+                          separatorBuilder: (context, index) =>
+                              const Divider(height: 20),
+                          itemCount: attendanceData.entries.length,
+                          itemBuilder: (context, index) {
+                            final entry =
+                                attendanceData.entries.elementAt(index);
                             final subject = entry.key;
                             final present = entry.value['present'] ?? 0;
-                            final absent = entry.value['absence'] ?? 0;
+                            final absent = entry.value['absent'] ?? 0;
                             final total = present + absent;
-                            final rate = total == 0
-                                ? '0.0'
-                                : (present / total * 100).toStringAsFixed(1);
-                            final presentRatio =
-                                total == 0 ? 0.0 : present / total;
-                            final absentRatio =
-                                total == 0 ? 0.0 : absent / total;
+                            final rate =
+                                total == 0 ? 0.0 : (present / total * 100);
 
-                            return Card(
-                              color: Colors.white.withOpacity(0.9),
+                            return Container(
                               margin: const EdgeInsets.symmetric(vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.3),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                  ),
+                                ],
+                              ),
                               child: Padding(
-                                padding: const EdgeInsets.all(12),
+                                padding: const EdgeInsets.all(16),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    ListTile(
-                                      contentPadding: EdgeInsets.zero,
-                                      leading: const Icon(Icons.check_circle,
-                                          color: Colors.green),
-                                      title: Text(
-                                        materialNames[subject] ??
-                                            'Unknown Subject',
-                                        style: const TextStyle(fontSize: 18),
-                                      ),
-                                      trailing: Text(
-                                        '$rate %',
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16),
-                                      ),
-                                    ),
                                     Row(
                                       children: [
+                                        const Icon(Icons.school,
+                                            color: Colors.blue),
+                                        const SizedBox(width: 10),
                                         Expanded(
-                                          flex: (presentRatio * 100).round(),
-                                          child: Container(
-                                            height: 8,
-                                            decoration: BoxDecoration(
-                                              color: Colors.green,
-                                              borderRadius:
-                                                  BorderRadius.circular(5),
+                                          child: Text(
+                                            materialNames[subject] ??
+                                                'Unknown Subject',
+                                            style: const TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w600,
                                             ),
                                           ),
                                         ),
-                                        Expanded(
-                                          flex: (absentRatio * 100).round(),
-                                          child: Container(
-                                            height: 8,
-                                            decoration: BoxDecoration(
-                                              color: Colors.red,
-                                              borderRadius:
-                                                  BorderRadius.circular(5),
-                                            ),
+                                        Text(
+                                          '${rate.toStringAsFixed(1)}%',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: rate >= 75
+                                                ? Colors.green
+                                                : Colors.red,
                                           ),
                                         ),
                                       ],
-                                    )
+                                    ),
+                                    const SizedBox(height: 10),
+                                    LinearProgressIndicator(
+                                      value: present / (total == 0 ? 1 : total),
+                                      backgroundColor: Colors.red[100],
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.green,
+                                      ),
+                                      minHeight: 10,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Present: $present',
+                                          style: const TextStyle(
+                                              color: Colors.green),
+                                        ),
+                                        Text(
+                                          'Absent: $absent',
+                                          style: const TextStyle(
+                                              color: Colors.red),
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                               ),
                             );
-                          }).toList(),
+                          },
                         ),
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );

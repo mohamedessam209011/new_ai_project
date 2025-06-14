@@ -1,7 +1,6 @@
-// ignore_for_file: prefer_const_constructors, avoid_print, file_names
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class AttendanceMonitoring extends StatefulWidget {
   const AttendanceMonitoring({super.key});
@@ -20,7 +19,7 @@ class _AttendanceMonitoringState extends State<AttendanceMonitoring> {
 
     if (materialNumber.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text("Please enter Material Number"),
           backgroundColor: Colors.red,
         ),
@@ -39,63 +38,93 @@ class _AttendanceMonitoringState extends State<AttendanceMonitoring> {
           .where('material_number', isEqualTo: materialNumber)
           .get();
 
-      for (var doc in snapshot.docs) {
+      // تصفية السجلات لاستبعاد الـ IDs العشوائية (تحتوي على أحرف)
+      final filteredDocs = snapshot.docs
+          .where((doc) => RegExp(r'^[0-9]+$')
+                  .hasMatch(doc.id) // يأخذ فقط الـ IDs الرقمية
+              )
+          .toList();
+
+      if (filteredDocs.isEmpty) {
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+
+      // استرجاع جميع الـ student_ids مرة واحدة
+      final studentIds =
+          filteredDocs.map((doc) => doc['student_id'].toString()).toList();
+
+      // جلب بيانات الطلاب باستخدام whereIn
+      final studentsSnapshot = await FirebaseFirestore.instance
+          .collection('student')
+          .where(FieldPath.documentId, whereIn: studentIds)
+          .get();
+
+      final studentMap = {
+        for (var doc in studentsSnapshot.docs) doc.id: doc.data()
+      };
+
+      for (var doc in filteredDocs) {
         final data = doc.data();
 
-        // ✅ Get student ID
-        final studentId = data['student_id'].toString();
-
-        // ✅ Fetch student name
-        String studentName = 'Unknown';
-        try {
-          final studentSnapshot = await FirebaseFirestore.instance
-              .collection('student')
-              .doc(studentId)
-              .get();
-          if (studentSnapshot.exists) {
-            final studentData = studentSnapshot.data()!;
-            final firstName = studentData['First_name'] ?? '';
-            final secondName = studentData['secound_Name'] ?? '';
-            final thirdName = studentData['Third_Name'] ?? '';
-            studentName = '$firstName $secondName $thirdName'.trim();
-          }
-        } catch (e) {
-          print('❌ Error fetching student name: $e');
-        }
-
-        // ✅ Format status
         String status = 'Unknown';
         if (data['presence'] != null) {
           final presenceValue =
               data['presence'].toString().toLowerCase().trim();
-          if (presenceValue == 'true') {
+          if (presenceValue == 'true' || presenceValue == 'حاضر') {
             status = 'حاضر';
-          } else if (presenceValue == 'false') {
-            status = 'Absent';
+          } else if (presenceValue == 'false' || presenceValue == 'غائب') {
+            status = 'غائب';
           }
         }
 
-        // ✅ Format date
         String time = 'Unknown';
         if (data['date'] != null) {
-          time = data['date'].toString();
+          final dateString = data['date'].toString();
+          try {
+            final parsedDate = DateTime.parse(dateString);
+            time = DateFormat('yyyy-MM-dd – HH:mm').format(parsedDate);
+          } catch (e) {
+            time = dateString;
+          }
+        }
+
+        final studentData = studentMap[data['student_id'].toString()];
+        String studentName = 'Unknown';
+        if (studentData != null) {
+          studentName = '${studentData['First_name']} '
+                  '${studentData['secound_Name']} '
+                  '${studentData['Third_Name']}'
+              .trim();
         }
 
         attendanceList.add({
-          'student_id': studentId,
+          'doc_id': doc.id, // إضافة ID المستند للفحص
+          'student_id': data['student_id'].toString(),
           'student_name': studentName,
           'status': status,
           'time': time,
         });
-        // ✅ ترتيب البيانات حسب التاريخ (من الأحدث إلى الأقدم)
-        attendanceList.sort((a, b) {
-          DateTime dateA = DateTime.parse(a['time']);
-          DateTime dateB = DateTime.parse(b['time']);
-          return dateB.compareTo(dateA); // لتصنيف البيانات من الأحدث إلى الأقدم
-        });
       }
+
+      attendanceList.sort((a, b) {
+        try {
+          final dateA = DateTime.parse(a['time']);
+          final dateB = DateTime.parse(b['time']);
+          return dateB.compareTo(dateA);
+        } catch (e) {
+          return 0;
+        }
+      });
     } catch (e) {
-      print("❌ Error fetching attendance: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error: ${e.toString()}"),
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       setState(() {
         isLoading = false;
@@ -107,8 +136,8 @@ class _AttendanceMonitoringState extends State<AttendanceMonitoring> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Attendance Monitoring'),
-        backgroundColor: Color(0xFF33BEF1),
+        title: const Text('Attendance Monitoring'),
+        backgroundColor: const Color(0xFF33BEF1),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -116,35 +145,64 @@ class _AttendanceMonitoringState extends State<AttendanceMonitoring> {
           children: [
             TextField(
               controller: _materialController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Material Number',
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             ElevatedButton(
               onPressed: fetchAttendance,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF33BEF1),
+                backgroundColor: const Color(0xFF33BEF1),
               ),
-              child: Text('Show Attendance'),
+              child: const Text('Show Attendance'),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             isLoading
-                ? CircularProgressIndicator()
+                ? const CircularProgressIndicator()
                 : Expanded(
                     child: attendanceList.isEmpty
-                        ? Text('No attendance records found.')
-                        : ListView.builder(
+                        ? const Center(
+                            child: Text('No attendance records found.'))
+                        : ListView.separated(
+                            separatorBuilder: (context, index) =>
+                                const Divider(),
                             itemCount: attendanceList.length,
                             itemBuilder: (context, index) {
                               final item = attendanceList[index];
                               return Card(
+                                elevation: 2,
                                 child: ListTile(
+                                  leading: Icon(
+                                    item['status'] == 'حاضر'
+                                        ? Icons.check_circle
+                                        : Icons.cancel,
+                                    color: item['status'] == 'حاضر'
+                                        ? Colors.green
+                                        : Colors.red,
+                                  ),
                                   title: Text(
-                                      'ID: ${item['student_id']} | Name: ${item['student_name']}'),
-                                  subtitle: Text(
-                                    'Status: ${item['status']}\nTime: ${item['time']}',
+                                    'ID: ${item['student_id']} | Name: ${item['student_name']}',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Status: ${item['status']}',
+                                        style: TextStyle(
+                                          color: item['status'] == 'حاضر'
+                                              ? Colors.green
+                                              : Colors.red,
+                                        ),
+                                      ),
+                                      Text('Time: ${item['time']}'),
+                                      Text('DocID: ${item['doc_id']}',
+                                          style: TextStyle(fontSize: 10)),
+                                    ],
                                   ),
                                 ),
                               );

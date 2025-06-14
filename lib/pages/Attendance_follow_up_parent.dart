@@ -10,9 +10,17 @@ class Attendance_follow_up extends StatelessWidget {
   const Attendance_follow_up({super.key, required this.parentId});
 
   Future<List<Map<String, dynamic>>> getStudentsForParent() async {
+    // تحويل parentId من String إلى int
+    int? parentIdInt = int.tryParse(parentId);
+
+    if (parentIdInt == null) {
+      print('Invalid parent ID');
+      return [];
+    }
+
     final querySnapshot = await FirebaseFirestore.instance
         .collection('student')
-        .where('parent_id', isEqualTo: parentId)
+        .where('parent_id', isEqualTo: parentIdInt) // استخدام القيمة الرقمية
         .get();
 
     return querySnapshot.docs
