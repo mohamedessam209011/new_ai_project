@@ -85,7 +85,7 @@ class _AttendanceMonitoringState extends State<AttendanceMonitoring> {
           final dateString = data['date'].toString();
           try {
             final parsedDate = DateTime.parse(dateString);
-            time = DateFormat('yyyy-MM-dd – HH:mm').format(parsedDate);
+            time = DateFormat('yyyy-MM-dd').format(parsedDate);
           } catch (e) {
             time = dateString;
           }
