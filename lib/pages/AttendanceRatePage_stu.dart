@@ -1,5 +1,7 @@
 // AttendanceRatePage_stu.dart
 
+// ignore_for_file: use_key_in_widget_constructors, file_names, avoid_print, prefer_const_constructors
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
@@ -172,9 +174,15 @@ class _SuccessPageState extends State<SuccessPage> {
               isEqualTo: int.parse(widget.studentId)) // تحويل إلى int
           .get();
 
+      // تصفية المستندات لاستبعاد IDs التي تحتوي على أحرف (تأخذ فقط IDs الرقمية)
+      final filteredDocs = snapshot.docs
+          .where((doc) => RegExp(r'^[0-9]+$').hasMatch(doc.id))
+          .toList();
+
       final Map<String, Map<String, int>> subjectMap = {};
 
-      for (var doc in snapshot.docs) {
+      for (var doc in filteredDocs) {
+        // استخدم filteredDocs بدلاً من snapshot.docs
         final data = doc.data();
         final rawSubject = data['material_number']?.toString() ?? 'Unknown';
         final rawStatus = data['presence'] ?? 'absent';

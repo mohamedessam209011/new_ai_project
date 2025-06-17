@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print, use_super_parameters, file_names
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
