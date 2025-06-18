@@ -12,8 +12,6 @@ class year_work extends StatelessWidget {
   Future<List<Map<String, dynamic>>> getStudentsForParent() async {
     print('Starting getStudentsForParent for parentId: $parentId');
 
-    // **التعديل الأساسي هنا:**
-    // محاولة تحويل parentId من String إلى int
     int? parentIdInt = int.tryParse(parentId);
 
     if (parentIdInt == null) {
@@ -49,7 +47,7 @@ class year_work extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('The guardian’s children'),
+        title: const Text('Year Work'),
         backgroundColor: const Color(0xFF05B8FB), // لون موحد
         iconTheme:
             const IconThemeData(color: Colors.white), // لون أيقونة الرجوع
@@ -66,7 +64,6 @@ class year_work extends StatelessWidget {
             return Center(child: Text('An error occurred: ${snapshot.error}'));
           }
 
-          // إذا لم يكن هناك بيانات أو كانت القائمة فارغة
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(
                 child: Text('There are no children associated with you.'));
@@ -78,13 +75,11 @@ class year_work extends StatelessWidget {
             itemBuilder: (context, index) {
               final student = students[index];
               final data = student['data'];
-              final id = student['id']; // معرف المستند (student code)
+              final id = student['id'];
 
-              // تأكد من أن الحقول موجودة قبل الوصول إليها وتوحيدها
               final firstName = data['First_name'] ?? '';
-              // تم تصحيح 'secound_Name' إلى 'second_Name' ليطابق ما في Firebase
-              final secondName = data['second_Name'] ?? '';
-              final thirdName = data['Third_Name'] ?? ''; // إذا كان موجوداً
+              final secondName = data['secound_Name'] ?? '';
+              final thirdName = data['Third_Name'] ?? '';
               final name = '$firstName $secondName $thirdName'.trim();
 
               return Card(
@@ -97,15 +92,10 @@ class year_work extends StatelessWidget {
                   contentPadding: const EdgeInsets.all(16),
                   leading: CircleAvatar(
                     radius: 28,
-                    // يفضل استخدام NetworkImage إذا كانت الصور ستُرفع إلى Firebase Storage
-                    // مثال: NetworkImage('URL_الصورة_من_Firebase_Storage')
-                    // حالياً يستخدم AssetImage، تأكد من وجود images/$id.jpg في مجلد assets/images
                     backgroundImage: AssetImage('images/$id.jpg'),
                     onBackgroundImageError: (exception, stackTrace) {
                       print(
                           '⚠️ Error loading image for student ID $id: $exception');
-                      // يمكنك وضع صورة احتياطية هنا إذا لم يتم العثور على الصورة الأصلية
-                      // مثال: setState(() { /* استخدم صورة افتراضية */ });
                     },
                   ),
                   title: Text(

@@ -55,7 +55,8 @@ class Attendance_follow_up extends StatelessWidget {
               final student = students[index];
               final data = student['data'];
               final id = student['id'];
-              final name = "${data['First_name']} ${data['secound_Name']}";
+              final name =
+                  "${data['First_name']} ${data['secound_Name']} ${data['Third_Name']}";
 
               return Card(
                 elevation: 4,
